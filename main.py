@@ -1,3 +1,6 @@
+from screeninfo import get_monitors
+
+from pyautogui import move
 import argparse
 import queue
 import threading
@@ -9,6 +12,20 @@ import cv2
 import depthai
 import numpy as np
 from math import cos, sin
+
+x_input = 258.7
+
+x_min = 230
+x_max = 173
+x_unit = 10
+
+y_min = 89
+y_max = 104
+y_unit = 10
+
+monitor = get_monitors()[0]
+
+print(y_unit)
 
 
 parser = argparse.ArgumentParser()
@@ -305,7 +322,7 @@ class Main:
                     return False, None
             else:
                 return read_correctly, new_frame
-
+    frame_count = 0
     def run(self):
         self.threads = [
             threading.Thread(target=self.face_thread),
@@ -316,6 +333,7 @@ class Main:
             thread.start()
 
         while self.should_run():
+            frame_count += 1
             try:
                 read_correctly, new_frame = self.get_frame()
             except RuntimeError:
@@ -333,6 +351,7 @@ class Main:
                 self.face_in.send(nn_data)
 
             if debug:  # face
+                
                 if self.gaze is not None and self.left_bbox is not None and self.right_bbox is not None:
                     re_x = (self.right_bbox[0] + self.right_bbox[2]) // 2
                     re_y = (self.right_bbox[1] + self.right_bbox[3]) // 2
@@ -351,6 +370,20 @@ class Main:
                     else:
                         cv2.arrowedLine(self.debug_frame, (le_x, le_y), (le_x + x, le_y - y), (255, 0, 255), 3)
                         cv2.arrowedLine(self.debug_frame, (re_x, re_y), (re_x + x, re_y - y), (255, 0, 255), 3)
+                        
+
+                        # x_unit = monitor.width / abs(x_min - x_max)
+                        # y_unit = monitor.height / abs(y_min - y_max)
+                        # x = abs(re_x - x_max) * x_unit
+                        # y = abs(re_y - y_max) * y_unit
+                        # print(x, y)
+                        # if frame_count % 100 == 0:
+                        #     print('Inside!')
+                            # move(10, 10) # move
+                        
+                        # print('org:', re_y, re_x)
+                        # print('clamped: ', x_clamped_high_distance, y_clamped_high_distance)
+                        
 
                 if not args.lazer:
                     for raw_bbox in self.bboxes:
